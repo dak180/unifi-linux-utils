@@ -145,14 +145,14 @@ if [[ -f ${SIGNED_CRT} ]]; then
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}" \
-    ${OPENSSL_LEGACY_FLAG}
+    "${OPENSSL_LEGACY_FLAG}"
 else
     openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}" \
-    ${OPENSSL_LEGACY_FLAG}
+    "${OPENSSL_LEGACY_FLAG}"
 fi
 	
 # Delete the previous certificate data from keystore to avoid "already exists" message
