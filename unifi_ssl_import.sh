@@ -22,13 +22,13 @@
 # and be back online immediately.
 
 # CONFIGURATION OPTIONS
-UNIFI_HOSTNAME=hostname.example.com
-UNIFI_SERVICE=unifi
+UNIFI_HOSTNAME="hostname.example.com"
+UNIFI_SERVICE="unifi"
 
 # Uncomment following three lines for Fedora/RedHat/CentOS
-UNIFI_DIR=/opt/UniFi
-JAVA_DIR=${UNIFI_DIR}
-KEYSTORE=${UNIFI_DIR}/data/keystore
+UNIFI_DIR="/opt/UniFi"
+JAVA_DIR="${UNIFI_DIR}"
+KEYSTORE="${UNIFI_DIR}/data/keystore"
 
 # Uncomment following three lines for Debian/Ubuntu
 #UNIFI_DIR=/var/lib/unifi
@@ -41,23 +41,23 @@ KEYSTORE=${UNIFI_DIR}/data/keystore
 #KEYSTORE=${JAVA_DIR}/data/keystore
 
 # Uncomment following three lines for Unifi Dream Machine CloudKey
-UNIFI_DIR=/mnt/data/unifi
-JAVA_DIR=/mnt/data/unifi
-KEYSTORE=${JAVA_DIR}/data/keystore
+UNIFI_DIR="/mnt/data/unifi"
+JAVA_DIR="/mnt/data/unifi"
+KEYSTORE="${JAVA_DIR}/data/keystore"
 
 # FOR LET'S ENCRYPT SSL CERTIFICATES ONLY
 # Generate your Let's Encrtypt key & cert with certbot before running this script
-LE_MODE=no
-LE_LIVE_DIR=/etc/letsencrypt/live
+LE_MODE="no"
+LE_LIVE_DIR="/etc/letsencrypt/live"
 
 # THE FOLLOWING OPTIONS NOT REQUIRED IF LE_MODE IS ENABLED
-PRIV_KEY=/etc/ssl/private/hostname.example.com.key
-SIGNED_CRT=/etc/ssl/certs/hostname.example.com.crt
-CHAIN_FILE=/etc/ssl/certs/startssl-chain.crt
+PRIV_KEY="/etc/ssl/private/hostname.example.com.key"
+SIGNED_CRT="/etc/ssl/certs/hostname.example.com.crt"
+CHAIN_FILE="/etc/ssl/certs/startssl-chain.crt"
 
 # CONFIGURATION OPTIONS YOU PROBABLY SHOULDN'T CHANGE
-ALIAS=unifi
-PASSWORD=aircontrolenterprise
+ALIAS="unifi"
+PASSWORD="aircontrolenterprise"
 
 #### SHOULDN'T HAVE TO TOUCH ANYTHING PAST THIS POINT ####
 
@@ -65,54 +65,54 @@ printf "\nStarting UniFi Controller SSL Import...\n"
 
 # Check to see whether Let's Encrypt Mode (LE_MODE) is enabled
 
-if [[ ${LE_MODE} == "YES" || ${LE_MODE} == "yes" || ${LE_MODE} == "Y" || ${LE_MODE} == "y" || ${LE_MODE} == "TRUE" || ${LE_MODE} == "true" || ${LE_MODE} == "ENABLED" || ${LE_MODE} == "enabled" || ${LE_MODE} == 1 ]] ; then
-	LE_MODE=true
+if [[ "${LE_MODE}" == "YES" || "${LE_MODE}" == "yes" || "${LE_MODE}" == "Y" || "${LE_MODE}" == "y" || "${LE_MODE}" == "TRUE" || "${LE_MODE}" == "true" || "${LE_MODE}" == "ENABLED" || "${LE_MODE}" == "enabled" || "${LE_MODE}" == 1 ]] ; then
+	LE_MODE="true"
 	printf "\nRunning in Let's Encrypt Mode...\n"
-	PRIV_KEY=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem
-	CHAIN_FILE=${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/fullchain.pem
+	PRIV_KEY="${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem"
+	CHAIN_FILE="${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/fullchain.pem"
 else
-	LE_MODE=false
+	LE_MODE="false"
 	printf "\nRunning in Standard Mode...\n"
 fi
 
 if [[ ${LE_MODE} == "true" ]]; then
 	# Check to see whether LE certificate has changed
 	printf "\nInspecting current SSL certificate...\n"
-	if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &>/dev/null; then
+	if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &> /dev/null; then
 		# MD5 remains unchanged, exit the script
 		printf "\nCertificate is unchanged, no update is necessary.\n"
 		exit 0
 	else
-	# MD5 is different, so it's time to get busy!
-	printf "\nUpdated SSL certificate available. Proceeding with import...\n"
+		# MD5 is different, so it's time to get busy!
+		printf "\nUpdated SSL certificate available. Proceeding with import...\n"
 	fi
 fi
 
 # Verify required files exist
-if [[ ! -f ${PRIV_KEY} ]] || [[ ! -f ${CHAIN_FILE} ]]; then
+if [[ ! -f "${PRIV_KEY}" ]] || [[ ! -f "${CHAIN_FILE}" ]]; then
 	printf "\nMissing one or more required files. Check your settings.\n"
 	exit 1
 else
 	# Everything looks OK to proceed
 	printf "\nImporting the following files:\n"
-	printf "Private Key: %s\n" "$PRIV_KEY"
-	printf "CA File: %s\n" "$CHAIN_FILE"
+	printf "Private Key: %s\n" "${PRIV_KEY}"
+	printf "CA File: %s\n" "${CHAIN_FILE}"
 fi
 
 # Create temp files
-P12_TEMP=$(mktemp)
+P12_TEMP="$(mktemp)"
 
 # Stop the UniFi Controller
 printf "\nStopping UniFi Controller...\n"
 service "${UNIFI_SERVICE}" stop
 
 if [[ ${LE_MODE} == "true" ]]; then
-	
-	# Write a new MD5 checksum based on the updated certificate	
+
+	# Write a new MD5 checksum based on the updated certificate
 	printf "\nUpdating certificate MD5 checksum...\n"
 
 	md5sum "${PRIV_KEY}" > "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
-	
+
 fi
 
 # Create double-safe keystore backup
@@ -125,16 +125,16 @@ else
 	printf "\nNo original keystore backup found.\n"
 	printf "\nCreating backup as keystore.orig...\n"
 fi
-	 
+
 # Export your existing SSL key, cert, and CA data to a PKCS12 file
 printf "\nExporting SSL certificate and key data into temporary PKCS12 file...\n"
 
 # Check for OpenSSL 3.x
-OPENSSL_VERSION=$(openssl version -v | awk '{print $2}'| awk -F '.' '{print $1}')
+OPENSSL_VERSION="$(openssl version -v | awk '{print $2}'| awk -F '.' '{print $1}')"
 if [[ "${OPENSSL_VERSION}" -ge '3' ]]; then
   OPENSSL_LEGACY_FLAG='-legacy'
 else
-  OPENSSL_LEGACY_FLAG=
+  OPENSSL_LEGACY_FLAG=""
 fi
 
 #If there is a signed crt we should include this in the export
@@ -154,11 +154,11 @@ else
     -name "${ALIAS}" \
     "${OPENSSL_LEGACY_FLAG}"
 fi
-	
+
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
 keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}"
-	
+
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
 keytool -importkeystore \
@@ -172,7 +172,7 @@ keytool -importkeystore \
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
 rm -f "${P12_TEMP}"
-	
+
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
 service "${UNIFI_SERVICE}" start
