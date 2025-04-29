@@ -130,7 +130,7 @@ fi
 printf "\nExporting SSL certificate and key data into temporary PKCS12 file...\n"
 
 # Check for OpenSSL 3.x
-OPENSSL_VERSION="$(openssl version -v | awk '{print $2}'| awk -F '.' '{print $1}')"
+OPENSSL_VERSION="$(openssl version -v | cut -f 2 -d ' ' | cut -f 1 -d '.')"
 if [[ "${OPENSSL_VERSION}" -ge '3' ]]; then
   OPENSSL_LEGACY_FLAG='-legacy'
 else
