@@ -138,7 +138,7 @@ else
 fi
 
 #If there is a signed crt we should include this in the export
-if [[ -f ${SIGNED_CRT} ]]; then
+if [[ -f "${SIGNED_CRT}" ]]; then
     openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -in "${SIGNED_CRT}" \
