@@ -26,14 +26,19 @@ UNIFI_HOSTNAME="hostname.example.com"
 UNIFI_SERVICE="unifi"
 
 # Uncomment following three lines for Fedora/RedHat/CentOS
-UNIFI_DIR="/opt/UniFi"
-JAVA_DIR="${UNIFI_DIR}"
-KEYSTORE="${UNIFI_DIR}/data/keystore"
+# UNIFI_DIR="/opt/UniFi"
+# JAVA_DIR="${UNIFI_DIR}"
+# KEYSTORE="${UNIFI_DIR}/data/keystore"
 
 # Uncomment following three lines for Debian/Ubuntu
 #UNIFI_DIR=/var/lib/unifi
 #JAVA_DIR=/usr/lib/unifi
 #KEYSTORE=${UNIFI_DIR}/keystore
+
+# Uncomment following three lines for FreeBSD/TrueNAS Core
+# UNIFI_DIR="/usr/local/share/java/unifi"
+# JAVA_DIR="${UNIFI_DIR}"
+# KEYSTORE="${JAVA_DIR}/data/keystore"
 
 # Uncomment following three lines for CloudKey
 #UNIFI_DIR=/var/lib/unifi
@@ -41,9 +46,9 @@ KEYSTORE="${UNIFI_DIR}/data/keystore"
 #KEYSTORE=${JAVA_DIR}/data/keystore
 
 # Uncomment following three lines for Unifi Dream Machine CloudKey
-UNIFI_DIR="/mnt/data/unifi"
-JAVA_DIR="/mnt/data/unifi"
-KEYSTORE="${JAVA_DIR}/data/keystore"
+# UNIFI_DIR="/mnt/data/unifi"
+# JAVA_DIR="/mnt/data/unifi"
+# KEYSTORE="${JAVA_DIR}/data/keystore"
 
 # FOR LET'S ENCRYPT SSL CERTIFICATES ONLY
 # Generate your Let's Encrtypt key & cert with certbot before running this script
