@@ -103,7 +103,7 @@ elif [ ! -f "${configFile}" ]; then
 fi
 
 # Source external config file
-# shellcheck source=./FanConfig
+# shellcheck source=./unifi_ssl_import.cfg
 . "${configFile}"
 
 # Check if needed software is installed.
