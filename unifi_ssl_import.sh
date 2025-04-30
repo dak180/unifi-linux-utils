@@ -8,6 +8,12 @@
 # Version 2.8
 # Last Updated Jan 13, 2017
 
+
+function usiConfig {
+	tee > "${configFile}" <<'EOF'
+
+# UniFi Controller SSL Certificate Import Script config file
+
 # REQUIREMENTS
 # 1) Assumes you have a UniFi Controller installed and running on your system.
 # 2) Assumes you already have a valid 2048-bit private key, signed certificate, and certificate authority
@@ -20,6 +26,9 @@
 # systems or /$UNIFI_DIR/keystore on Debian/Ubunty systems) to a separate directory before running this
 # script. If anything goes wrong, you can restore from your backup, restart the UniFi Controller service,
 # and be back online immediately.
+
+# Set this to 0 to enable
+defaultFile="1"
 
 # CONFIGURATION OPTIONS
 UNIFI_HOSTNAME="hostname.example.com"
@@ -63,6 +72,75 @@ CHAIN_FILE="/etc/ssl/certs/startssl-chain.crt"
 # CONFIGURATION OPTIONS YOU PROBABLY SHOULDN'T CHANGE
 ALIAS="unifi"
 PASSWORD="aircontrolenterprise"
+
+
+EOF
+	exit 0
+}
+
+#
+# Main Script Starts Here
+#
+
+while getopts ":c:" OPTION; do
+	case "${OPTION}" in
+		c)
+			configFile="${OPTARG}"
+		;;
+		?)
+			# If an unknown flag is used (or -?):
+			echo "${0} {-c configFile}" >&2
+			exit 1
+		;;
+	esac
+done
+
+if [ -z "${configFile}" ]; then
+	echo "Please specify a config file location." >&2
+	exit 1
+elif [ ! -f "${configFile}" ]; then
+	usiConfig
+fi
+
+# Source external config file
+# shellcheck source=./FanConfig
+. "${configFile}"
+
+# Check if needed software is installed.
+PATH="${PATH}:/usr/local/sbin:/usr/local/bin"
+commands=(
+printf
+md5sum
+mktemp
+service
+openssl
+cp
+keytool
+rm
+cut
+)
+for command in "${commands[@]}"; do
+	if ! type "${command}" &> /dev/null; then
+		echo "${command} is missing, please install" >&2
+		exit 100
+	fi
+done
+
+
+# Do not run if the config file has not been edited.
+if [ ! "${defaultFile}" = "0" ]; then
+	echo "Please edit the config file for your setup" >&2
+	exit 1
+fi
+
+
+# Must be run as root
+if [ ! "$(whoami)" = "root" ]; then
+	echo "Must be run as root." >&2
+	exit 1
+fi
+
+
 
 #### SHOULDN'T HAVE TO TOUCH ANYTHING PAST THIS POINT ####
 
