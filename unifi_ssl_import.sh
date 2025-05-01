@@ -147,8 +147,6 @@ fi
 
 
 
-#### SHOULDN'T HAVE TO TOUCH ANYTHING PAST THIS POINT ####
-
 printf "\nStarting UniFi Controller SSL Import...\n"
 
 # Check to see whether Let's Encrypt Mode (LE_MODE) is enabled
@@ -175,6 +173,7 @@ if [[ ${LE_MODE} == "true" ]]; then
 		printf "\nUpdated SSL certificate available. Proceeding with import...\n"
 	fi
 else
+	# Check to see whether the certificate has changed
 	printf "\nInspecting current SSL certificate...\n"
 	cattedFile="$(mktemp)"
 	cat "${PRIV_KEY}" "${SIGNED_CRT}" "${CHAIN_FILE}" > "${cattedFile}"
