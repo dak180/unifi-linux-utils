@@ -222,9 +222,11 @@ fi
 
 #If there is a signed crt we should include this in the export
 if [[ -f "${SIGNED_CRT}" ]]; then
+	COMB_FILE="$(mktemp)"
+	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}"
+
     openssl pkcs12 -export \
-    -in "${CHAIN_FILE}" \
-    -in "${SIGNED_CRT}" \
+    -in "${COMB_FILE}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}" \
@@ -254,7 +256,7 @@ keytool -importkeystore \
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
-rm -f "${P12_TEMP}"
+rm -f "${P12_TEMP}" "${COMB_FILE}"
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
