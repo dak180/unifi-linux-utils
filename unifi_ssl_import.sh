@@ -121,6 +121,11 @@ cut
 )
 for command in "${commands[@]}"; do
 	if ! type "${command}" &> /dev/null; then
+		if [ "${command}" = "service" ] && type "/bin/systemctl" &> /dev/null; then
+			SERVICE="/bin/systemctl"
+			continue
+		fi
+
 		echo "${command} is missing, please install" >&2
 		exit 100
 	fi
@@ -201,7 +206,11 @@ P12_TEMP="$(mktemp)"
 
 # Stop the UniFi Controller
 printf "\nStopping UniFi Controller...\n"
-service "${UNIFI_SERVICE}" stop
+if [ -z "${SERVICE}" ]; then
+	service "${UNIFI_SERVICE}" stop
+elif [ "${SERVICE}" = "/bin/systemctl" ]; then
+	/bin/systemctl stop "${UNIFI_SERVICE}"
+fi
 
 if [[ ${LE_MODE} == "true" ]]; then
 
@@ -274,7 +283,11 @@ rm -f "${P12_TEMP}" "${COMB_FILE}"
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
-service "${UNIFI_SERVICE}" start
+if [ -z "${SERVICE}" ]; then
+	service "${UNIFI_SERVICE}" start
+elif [ "${SERVICE}" = "/bin/systemctl" ]; then
+	/bin/systemctl start "${UNIFI_SERVICE}"
+fi
 
 # That's all, folks!
 printf "\nDone!\n"
