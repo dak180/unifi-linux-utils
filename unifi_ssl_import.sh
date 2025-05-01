@@ -220,13 +220,22 @@ if [[ ${LE_MODE} == "true" ]]; then
 
 fi
 
+# Get the correct stat invocation for the os
+# statInvok="-f '%Su:%Sg'" #Freebsd
+# statInvok="-c '%U:%G'" #Linux
+if stat -c '%U:%G' "${KEYSTORE}" &> /dev/null; then
+	permisSet="$(stat -c '%U:%G' "${KEYSTORE}")"
+elif stat -f '%Su:%Sg' "${KEYSTORE}" &> /dev/null; then
+	permisSet="$(stat -f '%Su:%Sg' "${KEYSTORE}")"
+fi
+
 # Create double-safe keystore backup
 if [[ -s "${KEYSTORE}.orig" ]]; then
 	printf "\nBackup of original keystore exists!\n"
 	printf "\nCreating non-destructive backup as keystore.bak...\n"
-	cp "${KEYSTORE}" "${KEYSTORE}.bak"
+	cp -a "${KEYSTORE}" "${KEYSTORE}.bak"
 else
-	cp "${KEYSTORE}" "${KEYSTORE}.orig"
+	cp -a "${KEYSTORE}" "${KEYSTORE}.orig"
 	printf "\nNo original keystore backup found.\n"
 	printf "\nCreating backup as keystore.orig...\n"
 fi
@@ -278,7 +287,13 @@ keytool -importkeystore \
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
-rm -f "${P12_TEMP}" "${COMB_FILE}"
+rm -f "${P12_TEMP}" "${COMB_FILE}" "${cattedFile}"
+
+# Fix permissions
+if [ ! -z "${permisSet}" ]; then
+	# shellcheck disable=SC2086
+	chown -fvv ${permisSet} "${KEYSTORE}" "${KEYSTORE}.orig" "${KEYSTORE}.bak"
+fi
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
