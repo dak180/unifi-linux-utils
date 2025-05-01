@@ -169,6 +169,20 @@ if [[ ${LE_MODE} == "true" ]]; then
 		# MD5 is different, so it's time to get busy!
 		printf "\nUpdated SSL certificate available. Proceeding with import...\n"
 	fi
+else
+	printf "\nInspecting current SSL certificate...\n"
+	cattedFile="$(mktemp)"
+	cat "${PRIV_KEY}" "${SIGNED_CRT}" "${CHAIN_FILE}" > "${cattedFile}"
+	CurrentMD5="$(md5sum -q "${cattedFile}")"
+	if [[ -f "${UNIFI_DIR}/certs.md5" ]] && [[ "$(cat "${UNIFI_DIR}/certs.md5")" = "${CurrentMD5}" ]]; then
+		# MD5 remains unchanged, exit the script
+		printf "\nCertificate is unchanged, no update is necessary.\n"
+		exit 0
+	else
+		# MD5 is different, so it's time to get busy!
+		echo "${CurrentMD5}" > "${UNIFI_DIR}/certs.md5"
+		printf "\nUpdated SSL certificate available. Proceeding with import...\n"
+	fi
 fi
 
 # Verify required files exist
