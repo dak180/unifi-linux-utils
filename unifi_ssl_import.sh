@@ -17,8 +17,8 @@ function usiConfig {
 # REQUIREMENTS
 # 1) Assumes you have a UniFi Controller installed and running on your system.
 # 2) Assumes you already have a valid 2048-bit private key, signed certificate, and certificate authority
-#    chain file. The Controller UI will not work with a 4096-bit certificate. See http://wp.me/p1iGgP-2wU
-#    for detailed instructions on how to generate those files and use them with this script.
+#	chain file. The Controller UI will not work with a 4096-bit certificate. See http://wp.me/p1iGgP-2wU
+#	for detailed instructions on how to generate those files and use them with this script.
 
 # KEYSTORE BACKUP
 # Even though this script attempts to be clever and careful in how it backs up your existing keystore,
@@ -256,19 +256,19 @@ if [[ -f "${SIGNED_CRT}" ]]; then
 	COMB_FILE="$(mktemp)"
 	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}" || { echo "Failed to combine certs." >&2; exit 1; }
 
-    openssl pkcs12 -export \
-    -in "${COMB_FILE}" \
-    -inkey "${PRIV_KEY}" \
-    -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
-    -name "${ALIAS}" \
-    ${OPENSSL_LEGACY_FLAG}  || { echo "Failed to export certs." >&2; exit 1; }
+	openssl pkcs12 -export \
+	-in "${COMB_FILE}" \
+	-inkey "${PRIV_KEY}" \
+	-out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
+	-name "${ALIAS}" \
+	${OPENSSL_LEGACY_FLAG}  || { echo "Failed to export certs." >&2; exit 1; }
 else
-    openssl pkcs12 -export \
-    -in "${CHAIN_FILE}" \
-    -inkey "${PRIV_KEY}" \
-    -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
-    -name "${ALIAS}" \
-    ${OPENSSL_LEGACY_FLAG} || { echo "Failed to export certs." >&2; exit 1; }
+	openssl pkcs12 -export \
+	-in "${CHAIN_FILE}" \
+	-inkey "${PRIV_KEY}" \
+	-out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
+	-name "${ALIAS}" \
+	${OPENSSL_LEGACY_FLAG} || { echo "Failed to export certs." >&2; exit 1; }
 fi
 
 # Delete the previous certificate data from keystore to avoid "already exists" message
