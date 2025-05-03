@@ -254,26 +254,26 @@ fi
 #If there is a signed crt we should include this in the export
 if [[ -f "${SIGNED_CRT}" ]]; then
 	COMB_FILE="$(mktemp)"
-	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}"
+	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}" || { echo "Failed to combine certs." >&2; exit 1; }
 
     openssl pkcs12 -export \
     -in "${COMB_FILE}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}" \
-    "${OPENSSL_LEGACY_FLAG}"
+    ${OPENSSL_LEGACY_FLAG}  || { echo "Failed to export certs." >&2; exit 1; }
 else
     openssl pkcs12 -export \
     -in "${CHAIN_FILE}" \
     -inkey "${PRIV_KEY}" \
     -out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
     -name "${ALIAS}" \
-    "${OPENSSL_LEGACY_FLAG}"
+    ${OPENSSL_LEGACY_FLAG} || { echo "Failed to export certs." >&2; exit 1; }
 fi
 
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
-keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}"
+keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}" || { echo "Failed to clear the keystore." >&2; exit 1; }
 
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
@@ -283,7 +283,7 @@ keytool -importkeystore \
 -destkeystore "${KEYSTORE}" \
 -deststorepass "${PASSWORD}" \
 -destkeypass "${PASSWORD}" \
--alias "${ALIAS}" -trustcacerts
+-alias "${ALIAS}" -trustcacerts || { echo "Failed to import the certificate into UniFi keystore." >&2; exit 1; }
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
