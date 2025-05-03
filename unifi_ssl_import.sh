@@ -78,6 +78,41 @@ EOF
 	exit 0
 }
 
+function unifiStop {
+	if [ -z "${SERVICE}" ]; then
+		service "${UNIFI_SERVICE}" stop
+	elif [ "${SERVICE}" = "/bin/systemctl" ]; then
+		/bin/systemctl stop "${UNIFI_SERVICE}"
+	else
+		# If we do not know how to stop the unifi service: die
+		exit 1
+	fi
+}
+
+function unifiStart {
+	# Unified start function
+	if [ -z "${SERVICE}" ]; then
+		service "${UNIFI_SERVICE}" start
+	elif [ "${SERVICE}" = "/bin/systemctl" ]; then
+		/bin/systemctl start "${UNIFI_SERVICE}"
+	fi
+}
+
+function updateFail {
+	# Clean up from a failed update
+	rm "${UNIFI_DIR}/certs.md5" "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5"
+	if [ -f "${KEYSTORE}.bak" ]; then
+		rm "${KEYSTORE}" && cp -a "${KEYSTORE}.bak" "${KEYSTORE}"
+		echo "Recovered from ${KEYSTORE}.bak" >&2
+	elif [ -f "${KEYSTORE}.orig" ]; then
+		rm "${KEYSTORE}" && cp -a "${KEYSTORE}.orig" "${KEYSTORE}"
+		echo "Recovered from ${KEYSTORE}.orig" >&2
+	else
+		echo "No keystore backup to recover from!" >&2
+	fi
+	unifiStart
+}
+
 #
 # Main Script Starts Here
 #
@@ -205,11 +240,7 @@ P12_TEMP="$(mktemp)"
 
 # Stop the UniFi Controller
 printf "\nStopping UniFi Controller...\n"
-if [ -z "${SERVICE}" ]; then
-	service "${UNIFI_SERVICE}" stop
-elif [ "${SERVICE}" = "/bin/systemctl" ]; then
-	/bin/systemctl stop "${UNIFI_SERVICE}"
-fi
+unifiStop
 
 if [[ ${LE_MODE} == "true" ]]; then
 
@@ -254,26 +285,26 @@ fi
 #If there is a signed crt we should include this in the export
 if [[ -f "${SIGNED_CRT}" ]]; then
 	COMB_FILE="$(mktemp)"
-	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}" || { echo "Failed to combine certs." >&2; exit 1; }
+	cat "${SIGNED_CRT}" "${CHAIN_FILE}" > "${COMB_FILE}" || { echo "Failed to combine certs." >&2; updateFail; exit 1; }
 
 	openssl pkcs12 -export \
 	-in "${COMB_FILE}" \
 	-inkey "${PRIV_KEY}" \
 	-out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
 	-name "${ALIAS}" \
-	${OPENSSL_LEGACY_FLAG}  || { echo "Failed to export certs." >&2; exit 1; }
+	${OPENSSL_LEGACY_FLAG}  || { echo "Failed to export certs." >&2; updateFail; exit 1; }
 else
 	openssl pkcs12 -export \
 	-in "${CHAIN_FILE}" \
 	-inkey "${PRIV_KEY}" \
 	-out "${P12_TEMP}" -passout pass:"${PASSWORD}" \
 	-name "${ALIAS}" \
-	${OPENSSL_LEGACY_FLAG} || { echo "Failed to export certs." >&2; exit 1; }
+	${OPENSSL_LEGACY_FLAG} || { echo "Failed to export certs." >&2; updateFail; exit 1; }
 fi
 
 # Delete the previous certificate data from keystore to avoid "already exists" message
 printf "\nRemoving previous certificate data from UniFi keystore...\n"
-keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}" || { echo "Failed to clear the keystore." >&2; exit 1; }
+keytool -delete -alias "${ALIAS}" -keystore "${KEYSTORE}" -deststorepass "${PASSWORD}" || { echo "Failed to clear the keystore." >&2; updateFail; exit 1; }
 
 # Import the temp PKCS12 file into the UniFi keystore
 printf "\nImporting SSL certificate into UniFi keystore...\n"
@@ -283,7 +314,7 @@ keytool -importkeystore \
 -destkeystore "${KEYSTORE}" \
 -deststorepass "${PASSWORD}" \
 -destkeypass "${PASSWORD}" \
--alias "${ALIAS}" -trustcacerts || { echo "Failed to import the certificate into UniFi keystore." >&2; exit 1; }
+-alias "${ALIAS}" -trustcacerts || { echo "Failed to import the certificate into UniFi keystore." >&2; updateFail; exit 1; }
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
@@ -297,11 +328,7 @@ fi
 
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
-if [ -z "${SERVICE}" ]; then
-	service "${UNIFI_SERVICE}" start
-elif [ "${SERVICE}" = "/bin/systemctl" ]; then
-	/bin/systemctl start "${UNIFI_SERVICE}"
-fi
+unifiStart
 
 # That's all, folks!
 printf "\nDone!\n"
