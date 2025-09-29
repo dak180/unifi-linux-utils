@@ -73,11 +73,14 @@ fi
 # Check if needed software is installed.
 PATH="${PATH}:/usr/local/sbin:/usr/local/bin"
 commands=(
-ssh
+basename
+cat
+cut
+dirname
+md5
 md5sum
 scp
-cat
-basename
+ssh
 )
 for command in "${commands[@]}"; do
 	if ! type "${command}" &> /dev/null; then
