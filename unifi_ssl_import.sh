@@ -210,16 +210,13 @@ if [[ ${LE_MODE} == "true" ]]; then
 else
 	# Check to see whether the certificate has changed
 	printf "\nInspecting current SSL certificate...\n"
-	cattedFile="$(mktemp)"
-	cat "${PRIV_KEY}" "${SIGNED_CRT}" "${CHAIN_FILE}" > "${cattedFile}"
-	CurrentMD5="$(md5sum -q "${cattedFile}")"
-	if [[ -f "${UNIFI_DIR}/certs.md5" ]] && [[ "$(cat "${UNIFI_DIR}/certs.md5")" = "${CurrentMD5}" ]]; then
+	if md5sum -c "${UNIFI_DIR}/certs.md5" &> /dev/null; then
 		# MD5 remains unchanged, exit the script
 		printf "\nCertificate is unchanged, no update is necessary.\n"
 		exit 0
 	else
 		# MD5 is different, so it's time to get busy!
-		echo "${CurrentMD5}" > "${UNIFI_DIR}/certs.md5"
+		md5sum "${PRIV_KEY}" "${SIGNED_CRT}" "${CHAIN_FILE}" > "${UNIFI_DIR}/certs.md5"
 		printf "\nUpdated SSL certificate available. Proceeding with import...\n"
 	fi
 fi
@@ -318,7 +315,7 @@ keytool -importkeystore \
 
 # Clean up temp files
 printf "\nRemoving temporary files...\n"
-rm -f "${P12_TEMP}" "${COMB_FILE}" "${cattedFile}"
+rm -f "${P12_TEMP}" "${COMB_FILE}"
 
 # Fix permissions
 if [ ! -z "${permisSet}" ]; then
