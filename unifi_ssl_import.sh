@@ -320,7 +320,7 @@ rm -f "${P12_TEMP}" "${COMB_FILE}"
 # Fix permissions
 if [ ! -z "${permisSet}" ]; then
 	# shellcheck disable=SC2086
-	chown -fvv ${permisSet} "${KEYSTORE}" "${KEYSTORE}.orig" "${KEYSTORE}.bak"
+	chown -f ${permisSet} "${KEYSTORE}" "${KEYSTORE}.orig" "${KEYSTORE}.bak"
 fi
 
 # Restart the UniFi Controller to pick up the updated keystore
