@@ -54,10 +54,11 @@ UNIFI_SERVICE="unifi"
 #JAVA_DIR=/usr/lib/unifi
 #KEYSTORE=${JAVA_DIR}/data/keystore
 
-# Uncomment following three lines for Unifi Dream Machine CloudKey
+# Uncomment following four lines for Unifi Dream Machine CloudKey
 # UNIFI_DIR="/mnt/data/unifi"
 # JAVA_DIR="/mnt/data/unifi"
 # KEYSTORE="${JAVA_DIR}/data/keystore"
+# CERT_DIR="/data/unifi-core/config"
 
 # FOR LET'S ENCRYPT SSL CERTIFICATES ONLY
 # Generate your Let's Encrtypt key & cert with certbot before running this script
@@ -203,7 +204,18 @@ else
 	printf "\nRunning in Standard Mode...\n"
 fi
 
-if [[ ${LE_MODE} == "true" ]]; then
+
+# Check to see if we are on a version of the console that supports adding certs via web interface
+if [ "$(cat /usr/lib/version | cut -d '.' -f 3)" = "v4" ]; then
+	cer_UUID="$(grep 'activeCertId' "${CERT_DIR}/settings.yaml" | cut -d ' ' -f 2)"
+	if [[ "${cer_UUID}" =~ "unifi-core" ]]; then
+		printf "\nPlease upload your Cert in the web ui first.\n"
+		exit 1
+	fi
+fi
+
+
+if [[ "${LE_MODE}" == "true" ]]; then
 	# Check to see whether LE certificate has changed
 	printf "\nInspecting current SSL certificate...\n"
 	if md5sum -c "${LE_LIVE_DIR}/${UNIFI_HOSTNAME}/privkey.pem.md5" &> /dev/null; then
@@ -333,6 +345,13 @@ fi
 # Restart the UniFi Controller to pick up the updated keystore
 printf "\nRestarting UniFi Controller to apply new Let's Encrypt SSL certificate...\n"
 unifiStart
+
+# Update the console cert
+if [ ! -z "${cer_UUID}" ]; then
+	cat "${PRIV_KEY}" > "${CERT_DIR}/${cer_UUID}.key" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
+	cat "${CHAIN_FILE}" > "${CERT_DIR}/${cer_UUID}.crt" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
+	/bin/systemctl restart unifi-core
+fi
 
 # That's all, folks!
 printf "\nDone!\n"
