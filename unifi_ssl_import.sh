@@ -121,6 +121,12 @@ function updateFail {
 	unifiStart
 }
 
+function unifiOS_update {
+	cat "${PRIV_KEY}" > "${CERT_DIR}/${cer_UUID}.key" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
+	cat "${CHAIN_FILE}" > "${CERT_DIR}/${cer_UUID}.crt" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
+	/bin/systemctl restart unifi-core
+}
+
 #
 # Main Script Starts Here
 #
@@ -348,9 +354,7 @@ unifiStart
 
 # Update the console cert
 if [ ! -z "${cer_UUID}" ]; then
-	cat "${PRIV_KEY}" > "${CERT_DIR}/${cer_UUID}.key" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
-	cat "${CHAIN_FILE}" > "${CERT_DIR}/${cer_UUID}.crt" || { echo "Failed to copy the certs." >&2; updateFail; exit 1; }
-	/bin/systemctl restart unifi-core
+	unifiOS_update
 fi
 
 # That's all, folks!
