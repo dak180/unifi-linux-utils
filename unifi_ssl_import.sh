@@ -257,6 +257,11 @@ else
 	printf "CA File: %s\n" "${CHAIN_FILE}"
 fi
 
+if [[ ! -f "${KEYSTORE}" ]]; then
+	echo "Cannot find the keystore. Check the config."
+	exit 1
+fi
+
 # Create temp files
 P12_TEMP="$(mktemp)"
 
