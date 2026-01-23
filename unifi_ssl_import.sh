@@ -212,7 +212,7 @@ fi
 
 
 # Check to see if we are on a version of the console that supports adding certs via web interface
-if [ "$(cat /usr/lib/version | cut -d '.' -f 3)" = "v4" ]; then
+if [ "$(cat /usr/lib/version | cut -d '.' -f 3 | sed -e 's:v::')" -ge "4" ]; then
 	cer_UUID="$(grep 'activeCertId' "${CERT_DIR}/settings.yaml" | cut -d ' ' -f 2)"
 	if [[ "${cer_UUID}" =~ "unifi-core" ]]; then
 		printf "\nPlease upload your Cert in the web ui first.\n"
